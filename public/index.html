@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DukanBook</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: #f8f9fa;
+      }
+      .navbar-brand {
+        font-weight: 700;
+        font-size: 1.4rem;
+      }
+      .nav-link {
+        cursor: pointer;
+      }
+      .screen {
+        display: none;
+      }
+      .screen.active {
+        display: block;
+      }
+      .stat-card {
+        border-radius: 12px;
+        padding: 20px;
+        color: white;
+      }
+      .cart-item {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+      .low-stock {
+        background: #fff3cd;
+      }
+      .badge-khata {
+        background: #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark px-3">
+      <span class="navbar-brand">🏪 DukanBook</span>
+      <div class="d-flex gap-3">
+        <span class="nav-link text-white" onclick="showScreen('dashboard')"
+          >Dashboard</span
+        >
+        <span class="nav-link text-white" onclick="showScreen('sale')"
+          >New Sale</span
+        >
+        <span class="nav-link text-white" onclick="showScreen('customers')"
+          >Customers</span
+        >
+        <span class="nav-link text-white" onclick="showScreen('inventory')"
+          >Inventory</span
+        >
+      </div>
+    </nav>
+
+    <div class="container py-4">
+      <!-- SCREEN 1: Dashboard -->
+      <div id="dashboard" class="screen active">
+        <h4 class="mb-4">📊 Today at a Glance</h4>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="stat-card bg-success">
+              <div class="fs-6">Today's Sales</div>
+              <div class="fs-2 fw-bold" id="totalSales">₹0</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-card bg-danger">
+              <div class="fs-6">Pending Khata</div>
+              <div class="fs-2 fw-bold" id="totalKhata">₹0</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-card bg-warning text-dark">
+              <div class="fs-6">Low Stock Items</div>
+              <div class="fs-2 fw-bold" id="lowStockCount">0</div>
+            </div>
+          </div>
+        </div>
+        <h6>Today's Transactions</h6>
+        <div id="todayTransactions"></div>
+      </div>
+
+      <!-- SCREEN 2: New Sale -->
+      <div id="sale" class="screen">
+        <h4 class="mb-4">🛒 New Sale</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <input
+              type="text"
+              id="itemSearch"
+              class="form-control mb-2"
+              placeholder="Search item..."
+            />
+            <div id="itemResults"></div>
+          </div>
+          <div class="col-md-6">
+            <h6>Cart</h6>
+            <div id="cart"></div>
+            <div class="mt-3 fw-bold fs-5">
+              Total: ₹<span id="cartTotal">0</span>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+              <button
+                class="btn btn-success btn-lg"
+                onclick="completeSale('cash')"
+              >
+                💵 Cash — Done
+              </button>
+              <button
+                class="btn btn-danger btn-lg"
+                onclick="showKhataSection()"
+              >
+                📒 Khata
+              </button>
+            </div>
+
+            <!-- Khata section — hidden by default -->
+            <div id="khataSection" class="d-none mt-3 p-3 border rounded">
+              <h6 class="mb-2">Select Khata Customer</h6>
+              <select id="customerSelect" class="form-select mb-2">
+                <option value="">Select Customer</option>
+              </select>
+              <button
+                class="btn btn-outline-secondary btn-sm mb-2"
+                onclick="showAddCustomer()"
+              >
+                + New Customer
+              </button>
+              <div id="addCustomerForm" class="d-none">
+                <input
+                  type="text"
+                  id="newCustName"
+                  class="form-control mb-1"
+                  placeholder="Customer Name"
+                />
+                <input
+                  type="text"
+                  id="newCustPhone"
+                  class="form-control mb-1"
+                  placeholder="Phone (optional)"
+                />
+                <button class="btn btn-sm btn-dark" onclick="addCustomer()">
+                  Save Customer
+                </button>
+              </div>
+              <button
+                class="btn btn-danger w-100 mt-2"
+                onclick="completeSale('khata')"
+              >
+                ✅ Confirm Khata
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- SCREEN 3: Customers -->
+      <div id="customers" class="screen">
+        <h4 class="mb-4">👥 Khata Tracker</h4>
+        <div id="customerList"></div>
+      </div>
+
+      <!-- SCREEN 4: Inventory -->
+      <div id="inventory" class="screen">
+        <h4 class="mb-4">📦 Inventory</h4>
+        <button class="btn btn-dark mb-3" onclick="toggleAddItem()">
+          + Add Item
+        </button>
+        <div id="addItemForm" class="card p-3 mb-3 d-none">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <input
+                type="text"
+                id="itemName"
+                class="form-control"
+                placeholder="Item name"
+              />
+            </div>
+            <div class="col-md-3">
+              <input
+                type="number"
+                id="itemPrice"
+                class="form-control"
+                placeholder="Price (₹)"
+              />
+            </div>
+            <div class="col-md-3">
+              <input
+                type="number"
+                id="itemStock"
+                class="form-control"
+                placeholder="Stock qty"
+              />
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-success w-100" onclick="addItem()">
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="inventoryList"></div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let cart = [];
+      let allCustomers = [];
+
+      // ── Screen switching ──────────────────────────────────
+      function showScreen(name) {
+        $(".screen").removeClass("active");
+        $("#" + name).addClass("active");
+        if (name === "dashboard") loadDashboard();
+        if (name === "sale") {
+          loadItemSearch();
+          loadCustomersDropdown();
+        }
+        if (name === "customers") loadCustomers();
+        if (name === "inventory") loadInventory();
+      }
+
+      // ── DASHBOARD ─────────────────────────────────────────
+      function loadDashboard() {
+        $.get("/api/transactions", function (txns) {
+          let total = 0;
+          txns.forEach((t) => (total += t.total));
+          $("#totalSales").text("₹" + total);
+
+          let html = "";
+          txns.forEach((t) => {
+            html += `<div class="card mb-2 p-2">
+          <div class="d-flex justify-content-between">
+            <span>${t.customerId ? t.customerId.name : "Unknown"}</span>
+            <span class="badge bg-${t.paymentType === "cash" ? "success" : "danger"}">${t.paymentType}</span>
+            <span>₹${t.total}</span>
+          </div>
+        </div>`;
+          });
+          $("#todayTransactions").html(
+            html || '<p class="text-muted">No transactions today</p>',
+          );
+        });
+
+        $.get("/api/customers", function (custs) {
+          let khata = 0;
+          custs.forEach((c) => (khata += c.totalBalance));
+          $("#totalKhata").text("₹" + khata);
+        });
+
+        $.get("/api/items", function (items) {
+          let low = items.filter((i) => i.stock <= i.lowStockAlert).length;
+          $("#lowStockCount").text(low);
+        });
+      }
+
+      // ── NEW SALE ──────────────────────────────────────────
+      function loadItemSearch() {
+        $("#itemSearch").on("input", function () {
+          const q = $(this).val();
+          if (q.length < 1) {
+            $("#itemResults").html("");
+            return;
+          }
+          $.get("/api/items?search=" + q, function (items) {
+            let html = "";
+            items.forEach((item) => {
+              html += `<div class="cart-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${item.name}</strong> — ₹${item.price}
+              <small class="text-muted d-block">Stock: ${item.stock}</small>
+            </div>
+            <button class="btn btn-sm btn-dark" onclick='addToCart(${JSON.stringify(item)})'>+ Add</button>
+          </div>`;
+            });
+            $("#itemResults").html(
+              html || '<p class="text-muted">No items found</p>',
+            );
+          });
+        });
+      }
+
+      function addToCart(item) {
+        const existing = cart.find((c) => c.itemId === item._id);
+        if (existing) {
+          existing.quantity++;
+        } else {
+          cart.push({
+            itemId: item._id,
+            name: item.name,
+            price: item.price,
+            quantity: 1,
+          });
+        }
+        renderCart();
+      }
+
+      function renderCart() {
+        let html = "";
+        let total = 0;
+        cart.forEach((c, i) => {
+          total += c.price * c.quantity;
+          html += `<div class="cart-item d-flex justify-content-between align-items-center">
+        <span>${c.name}</span>
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${i}, -1)">−</button>
+          <span>${c.quantity}</span>
+          <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${i}, 1)">+</button>
+          <span>₹${c.price * c.quantity}</span>
+          <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${i})">✕</button>
+        </div>
+      </div>`;
+        });
+        $("#cart").html(html || '<p class="text-muted">Cart is empty</p>');
+        $("#cartTotal").text(total);
+      }
+
+      function changeQty(i, delta) {
+        cart[i].quantity += delta;
+        if (cart[i].quantity <= 0) cart.splice(i, 1);
+        renderCart();
+      }
+
+      function removeFromCart(i) {
+        cart.splice(i, 1);
+        renderCart();
+      }
+
+      function loadCustomersDropdown() {
+        $.get("/api/customers", function (custs) {
+          allCustomers = custs;
+          let opts = '<option value="">Select Customer</option>';
+          custs.forEach((c) => {
+            opts += `<option value="${c._id}">${c.name} ${c.totalBalance > 0 ? "(₹" + c.totalBalance + " due)" : ""}</option>`;
+          });
+          $("#customerSelect").html(opts);
+        });
+      }
+
+      function showKhataSection() {
+        if (cart.length === 0) {
+          alert("Cart is empty");
+          return;
+        }
+        $("#khataSection").removeClass("d-none");
+        loadCustomersDropdown();
+      }
+
+      function showAddCustomer() {
+        $("#addCustomerForm").toggleClass("d-none");
+      }
+
+      function addCustomer() {
+        const name = $("#newCustName").val().trim();
+        if (!name) {
+          alert("Enter customer name");
+          return;
+        }
+        $.ajax({
+          url: "/api/customers",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ name, phone: $("#newCustPhone").val() }),
+          success: function (c) {
+            $("#addCustomerForm").addClass("d-none");
+            $("#newCustName").val("");
+            $("#newCustPhone").val("");
+            loadCustomersDropdown();
+            alert("Customer added: " + c.name);
+          },
+          error: function () {
+            alert("Error saving customer");
+          },
+        });
+      }
+      function completeSale(paymentType) {
+        if (cart.length === 0) {
+          alert("Cart is empty");
+          return;
+        }
+
+        let customerId = "cash"; // default for cash
+
+        if (paymentType === "khata") {
+          customerId = $("#customerSelect").val();
+          if (!customerId) {
+            alert("Please select a customer");
+            return;
+          }
+        }
+
+        // For cash sales, use a dummy/default customer ID or handle in backend
+        const payload = { items: cart, paymentType };
+        if (paymentType === "khata") payload.customerId = customerId;
+
+        $.ajax({
+          url: "/api/transactions",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify(payload),
+          success: function (res) {
+            alert("Sale saved! Total: ₹" + res.transaction.total);
+            cart = [];
+            renderCart();
+            $("#itemSearch").val("");
+            $("#itemResults").html("");
+            $("#khataSection").addClass("d-none");
+          },
+          error: function (err) {
+            alert("Error saving sale");
+          },
+        });
+      }
+
+      // ── CUSTOMERS ─────────────────────────────────────────
+      function loadCustomers() {
+        $.get("/api/customers", function (custs) {
+          let html = "";
+          custs.forEach((c) => {
+            html += `<div class="card mb-2 p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${c.name}</strong>
+              <small class="text-muted d-block">${c.phone || "No phone"}</small>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <span class="badge bg-${c.totalBalance > 0 ? "danger" : "success"} fs-6">
+                ₹${c.totalBalance} ${c.totalBalance > 0 ? "due" : "clear"}
+              </span>
+              ${
+                c.totalBalance > 0
+                  ? `
+                <input type="number" id="pay_${c._id}" class="form-control form-control-sm" style="width:90px" placeholder="₹ amt"/>
+                <button class="btn btn-sm btn-success" onclick="recordPayment('${c._id}')">Pay</button>
+              `
+                  : ""
+              }
+            </div>
+          </div>
+        </div>`;
+          });
+          $("#customerList").html(
+            html || '<p class="text-muted">No customers yet</p>',
+          );
+        });
+      }
+
+      function recordPayment(id) {
+        const amt = parseFloat($("#pay_" + id).val());
+        if (!amt || amt <= 0) {
+          alert("Enter valid amount");
+          return;
+        }
+        $.ajax({
+          url: "/api/customers/" + id + "/pay",
+          method: "PATCH",
+          contentType: "application/json",
+          data: JSON.stringify({ amount: amt }),
+          success: function () {
+            loadCustomers();
+          },
+        });
+      }
+
+      // ── INVENTORY ─────────────────────────────────────────
+      function toggleAddItem() {
+        $("#addItemForm").toggleClass("d-none");
+      }
+
+      function addItem() {
+        const name = $("#itemName").val().trim();
+        const price = parseFloat($("#itemPrice").val());
+        const stock = parseInt($("#itemStock").val());
+        if (!name || !price || !stock) {
+          alert("Fill all fields");
+          return;
+        }
+
+        $.ajax({
+          url: "/api/items",
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ name, price, stock }),
+          success: function () {
+            $("#itemName").val("");
+            $("#itemPrice").val("");
+            $("#itemStock").val("");
+            $("#addItemForm").addClass("d-none");
+            loadInventory();
+          },
+          error: function (err) {
+            alert("Error: " + err.responseJSON.error);
+          },
+        });
+      }
+
+      function loadInventory() {
+        $.get("/api/items", function (items) {
+          let html = "";
+          items.forEach((item) => {
+            const low = item.stock <= item.lowStockAlert;
+            html += `<div class="card mb-2 p-3 ${low ? "low-stock" : ""}">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${item.name}</strong> — ₹${item.price}
+              ${low ? '<span class="badge bg-warning text-dark ms-2">Low Stock</span>' : ""}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-secondary">Stock: ${item.stock}</span>
+              <input type="number" id="restock_${item._id}" class="form-control form-control-sm" style="width:80px" placeholder="qty"/>
+              <button class="btn btn-sm btn-dark" onclick="restockItem('${item._id}')">Restock</button>
+            </div>
+          </div>
+        </div>`;
+          });
+          $("#inventoryList").html(
+            html || '<p class="text-muted">No items yet. Add some!</p>',
+          );
+        });
+      }
+
+      function restockItem(id) {
+        const qty = parseInt($("#restock_" + id).val());
+        if (!qty || qty <= 0) {
+          alert("Enter valid quantity");
+          return;
+        }
+        $.ajax({
+          url: "/api/items/" + id + "/restock",
+          method: "PATCH",
+          contentType: "application/json",
+          data: JSON.stringify({ quantity: qty }),
+          success: function () {
+            loadInventory();
+          },
+        });
+      }
+
+      // Load dashboard on start
+      loadDashboard();
+    </script>
+  </body>
+</html>
