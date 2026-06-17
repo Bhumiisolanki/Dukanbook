@@ -16,7 +16,7 @@ app.use('/api/customers', require('./routes/customers'));
 app.use('/api/transactions', require('./routes/transactions'));
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/dukanbook')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/dukanbook')
   .then(() => {
     console.log('MongoDB connected ✅');
     app.listen(3000, () => console.log('Server running on http://localhost:3000 🚀'));
