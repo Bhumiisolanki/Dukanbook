@@ -40,5 +40,15 @@ router.patch('/:id/restock', async (req, res) => {
   }
 });
 
+// DELETE item
+router.delete('/:id', async (req, res) => {
+  try {
+    await Item.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
 

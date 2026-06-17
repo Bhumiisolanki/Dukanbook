@@ -6,4 +6,6 @@ const customerSchema = new mongoose.Schema({
   totalBalance: { type: Number, default: 0 }
 });
 
+
+
 module.exports = mongoose.models.Customer || mongoose.model('Customer', customerSchema);

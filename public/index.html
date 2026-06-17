@@ -92,6 +92,8 @@
         <h6>Today's Transactions</h6>
         <div id="todayTransactions"></div>
       </div>
+      <h6 class="mt-4">⚠️ Low Stock Items</h6>
+      <div id="lowStockList"></div>
 
       <!-- SCREEN 2: New Sale -->
       <div id="sale" class="screen">
@@ -266,6 +268,19 @@
         $.get("/api/items", function (items) {
           let low = items.filter((i) => i.stock <= i.lowStockAlert).length;
           $("#lowStockCount").text(low);
+
+          let lowHtml = "";
+          items
+            .filter((i) => i.stock <= i.lowStockAlert)
+            .forEach((i) => {
+              lowHtml += `<div class="card mb-2 p-2 d-flex flex-row justify-content-between align-items-center">
+    <span>${i.name}</span>
+    <span class="badge bg-warning text-dark">Stock: ${i.stock}</span>
+  </div>`;
+            });
+          $("#lowStockList").html(
+            lowHtml || '<p class="text-muted">No low stock items!</p>',
+          );
         });
       }
 
@@ -447,6 +462,8 @@
                   ? `
                 <input type="number" id="pay_${c._id}" class="form-control form-control-sm" style="width:90px" placeholder="₹ amt"/>
                 <button class="btn btn-sm btn-success" onclick="recordPayment('${c._id}')">Pay</button>
+
+                <button class="btn btn-sm btn-danger ms-2" onclick="deleteCustomer('${c._id}')">Delete</button>
               `
                   : ""
               }
@@ -524,6 +541,8 @@
               <span class="badge bg-secondary">Stock: ${item.stock}</span>
               <input type="number" id="restock_${item._id}" class="form-control form-control-sm" style="width:80px" placeholder="qty"/>
               <button class="btn btn-sm btn-dark" onclick="restockItem('${item._id}')">Restock</button>
+              
+<button class="btn btn-sm btn-danger" onclick="deleteItem('${item._id}')">Delete</button>
             </div>
           </div>
         </div>`;
@@ -549,8 +568,29 @@
             loadInventory();
           },
         });
-      }
+      } // ← restockItem band
 
+      function deleteItem(id) {
+        if (!confirm("Are you sure?")) return;
+        $.ajax({
+          url: "/api/items/" + id,
+          method: "DELETE",
+          success: function () {
+            loadInventory();
+          },
+        });
+
+        function deleteCustomer(id) {
+          if (!confirm("Delete this customer?")) return;
+          $.ajax({
+            url: "/api/customers/" + id,
+            method: "DELETE",
+            success: function () {
+              loadCustomers();
+            },
+          });
+        }
+      }
       // Load dashboard on start
       loadDashboard();
     </script>
